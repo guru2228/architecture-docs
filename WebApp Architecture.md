@@ -673,10 +673,12 @@ Leveraging Turborepo and Changesets enables efficient management of a monorepo w
 
 # Additional Resources
 
+- **Server & Client Components:** [https://nextjs.org/learn/react-foundations/server-and-client-components]
 - **Turborepo Documentation:** [https://turbo.build/repo/docs](https://turbo.build/repo/docs)
 - **pnpm Documentation:** [https://pnpm.io/](https://pnpm.io/)
 - **Changesets Documentation:** [https://github.com/changesets/changesets](https://github.com/changesets/changesets)
 - **Semantic Versioning:** [https://semver.org/](https://semver.org/)
 - **NPM Publishing:** [https://docs.npmjs.com/cli/v7/commands/npm-publish](https://docs.npmjs.com/cli/v7/commands/npm-publish)
+- **Demo fo React Streming:** [https://next-edge-demo.netlify.app/]
 
 ---
