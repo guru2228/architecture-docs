@@ -24,15 +24,23 @@ To achieve this, we'll use:
 ```
 root/
 ├── apps/
-│   ├── web/          # Next.js app (web)
-│   └── mobile/       # React Native app (iOS and Android)
+│   ├── web/                           # Next.js app (web)
+│   └── mobile/                        # React Native app (iOS and Android)
 ├── packages/
-│   ├── ui/           # Shared UI components (independently versioned)
-│   ├── utils/        # Shared utilities and helper functions (independently versioned)
-│   └── services/     # Shared business logic and services (independently versioned)
-├── .turbo/           # Turborepo configuration
+│   ├── ui/                            # Shared UI components
+│   │    ├── <component_name>/         # Component Folder (independently versioned)
+│   │    ├── package.json              # Component Specific Package JSON
+│   │    └── README.md                 # Component Specific README.md explaining how to use and what helm config required   
+│   ├── utils/                         # Shared utilities and helper functions
+│   │    ├── <component_name>-util/    # Component Specific Util (independently versioned)
+│   │    └── package.json              # Component Specific Util Package JSON  
+│   └── services/                      # Shared business logic and services
+│        ├── <component_name>-srvc/    # Component Specific Services (independently versioned)
+│        └── package.json              # Component Specific Services Package JSON 
+├── .turbo/                            # Turborepo configuration
+├── README.md
 ├── package.json
-└── pnpm-workspace.yaml
+└── tsconfig.json
 ```
 
 ---
