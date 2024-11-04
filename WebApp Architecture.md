@@ -1,4 +1,4 @@
-# Architecture Summary for a Cross-Platform Online & Offline Capable App Using NextJS and resuse code to support Native App in iOS & Android with Independent Package Releases Using Turborepo and **pnpm**
+# Architecture for a Cross-Platform Online & Offline Capable App Using NextJS and resuse code to support Native App in iOS & Android with Independent Package Releases Using Turborepo and **pnpm**
 
 ## Overview
 
