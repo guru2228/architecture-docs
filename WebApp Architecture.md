@@ -37,6 +37,12 @@ root/
 
 ---
 
+## Architecture
+
+![image](diagram-export-11-4-2024-8_06_21-AM.png)
+
+---
+
 # Step-by-Step Implementation Guide with Independent Releases Using **pnpm**
 
 ## Prerequisites
