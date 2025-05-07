@@ -1,0 +1,100 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/26.0.9 Chrome/128.0.6613.186 Electron/32.2.5 Safari/537.36" version="26.0.9">
+  <diagram name="Page-1" id="yrXHj6heZxm2oevvZnZg">
+    <mxGraphModel dx="792" dy="512" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="DZGBvKgO81pYHmkuGwiG-3" value="Prior Auth Intake &amp;amp; Review Process" style="swimlane;html=1;childLayout=stackLayout;resizeParent=1;resizeParentMax=0;horizontal=0;startSize=20;horizontalStack=0;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="50" y="220" width="790" height="360" as="geometry" />
+        </mxCell>
+        <mxCell id="DZGBvKgO81pYHmkuGwiG-4" value="Intake" style="swimlane;html=1;startSize=30;horizontal=0;" vertex="1" parent="DZGBvKgO81pYHmkuGwiG-3">
+          <mxGeometry x="20" width="770" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="DZGBvKgO81pYHmkuGwiG-5" value="Autonomous&lt;div&gt;Agents&lt;/div&gt;" style="swimlane;html=1;startSize=30;horizontal=0;" vertex="1" parent="DZGBvKgO81pYHmkuGwiG-3">
+          <mxGeometry x="20" y="120" width="770" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="DZGBvKgO81pYHmkuGwiG-10" value="Form Completion Assist Agent" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="DZGBvKgO81pYHmkuGwiG-5">
+          <mxGeometry x="80" y="11" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="DZGBvKgO81pYHmkuGwiG-11" value="Document Gathering Agent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="DZGBvKgO81pYHmkuGwiG-5">
+          <mxGeometry x="240" y="11" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="DZGBvKgO81pYHmkuGwiG-12" value="Eligibility &amp;amp; Benefit Verification Agent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="DZGBvKgO81pYHmkuGwiG-5">
+          <mxGeometry x="400" y="11" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="DZGBvKgO81pYHmkuGwiG-13" value="Submission Validation Agent" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="DZGBvKgO81pYHmkuGwiG-5">
+          <mxGeometry x="560" y="11" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="DZGBvKgO81pYHmkuGwiG-14" value="Document Analysis Agent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="DZGBvKgO81pYHmkuGwiG-5">
+          <mxGeometry x="80" y="66" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="DZGBvKgO81pYHmkuGwiG-15" value="Medical Necessity Evaluation/Review Agent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="DZGBvKgO81pYHmkuGwiG-5">
+          <mxGeometry x="240" y="66" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="DZGBvKgO81pYHmkuGwiG-16" value="Decision Support Agent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="DZGBvKgO81pYHmkuGwiG-5">
+          <mxGeometry x="400" y="66" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="DZGBvKgO81pYHmkuGwiG-17" value="Communication &amp;amp; Notification Agent" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="DZGBvKgO81pYHmkuGwiG-5">
+          <mxGeometry x="560" y="66" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="DZGBvKgO81pYHmkuGwiG-6" value="Review" style="swimlane;html=1;startSize=30;horizontal=0;" vertex="1" parent="DZGBvKgO81pYHmkuGwiG-3">
+          <mxGeometry x="20" y="240" width="770" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="DZGBvKgO81pYHmkuGwiG-7" value="Intake Assist Agent&lt;div&gt;(multi agent orchestrator)&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="DZGBvKgO81pYHmkuGwiG-6">
+          <mxGeometry x="300" y="-200" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="DZGBvKgO81pYHmkuGwiG-8" value="Review Assist Agent&lt;div&gt;(multi agent orchestrator)&lt;br&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="DZGBvKgO81pYHmkuGwiG-6">
+          <mxGeometry x="300" y="40" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="DZGBvKgO81pYHmkuGwiG-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;curved=1;" edge="1" parent="DZGBvKgO81pYHmkuGwiG-3" source="DZGBvKgO81pYHmkuGwiG-7" target="DZGBvKgO81pYHmkuGwiG-10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="DZGBvKgO81pYHmkuGwiG-20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;curved=1;" edge="1" parent="DZGBvKgO81pYHmkuGwiG-3" source="DZGBvKgO81pYHmkuGwiG-7" target="DZGBvKgO81pYHmkuGwiG-11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="DZGBvKgO81pYHmkuGwiG-21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;curved=1;" edge="1" parent="DZGBvKgO81pYHmkuGwiG-3" source="DZGBvKgO81pYHmkuGwiG-7" target="DZGBvKgO81pYHmkuGwiG-12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="DZGBvKgO81pYHmkuGwiG-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;shadow=0;curved=1;" edge="1" parent="DZGBvKgO81pYHmkuGwiG-3" source="DZGBvKgO81pYHmkuGwiG-7" target="DZGBvKgO81pYHmkuGwiG-13">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="DZGBvKgO81pYHmkuGwiG-23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;curved=1;" edge="1" parent="DZGBvKgO81pYHmkuGwiG-3" source="DZGBvKgO81pYHmkuGwiG-8" target="DZGBvKgO81pYHmkuGwiG-14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="DZGBvKgO81pYHmkuGwiG-24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;curved=1;" edge="1" parent="DZGBvKgO81pYHmkuGwiG-3" source="DZGBvKgO81pYHmkuGwiG-8" target="DZGBvKgO81pYHmkuGwiG-15">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="DZGBvKgO81pYHmkuGwiG-25" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;curved=1;" edge="1" parent="DZGBvKgO81pYHmkuGwiG-3" source="DZGBvKgO81pYHmkuGwiG-8" target="DZGBvKgO81pYHmkuGwiG-16">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="DZGBvKgO81pYHmkuGwiG-26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;curved=1;" edge="1" parent="DZGBvKgO81pYHmkuGwiG-3" source="DZGBvKgO81pYHmkuGwiG-8" target="DZGBvKgO81pYHmkuGwiG-17">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="DZGBvKgO81pYHmkuGwiG-28" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="DZGBvKgO81pYHmkuGwiG-27" target="DZGBvKgO81pYHmkuGwiG-7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="DZGBvKgO81pYHmkuGwiG-27" value="UHC Provider Portal" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="385" y="130" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="DZGBvKgO81pYHmkuGwiG-30" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="DZGBvKgO81pYHmkuGwiG-29" target="DZGBvKgO81pYHmkuGwiG-8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="DZGBvKgO81pYHmkuGwiG-29" value="OCM Clinical Portal" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="385" y="610" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="DZGBvKgO81pYHmkuGwiG-33" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="DZGBvKgO81pYHmkuGwiG-32" target="DZGBvKgO81pYHmkuGwiG-27">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="DZGBvKgO81pYHmkuGwiG-32" value="Providers &amp;amp; Provider Representatives" style="sketch=0;verticalLabelPosition=bottom;sketch=0;aspect=fixed;html=1;verticalAlign=top;strokeColor=none;fillColor=#000000;align=center;outlineConnect=0;pointerEvents=1;shape=mxgraph.citrix2.users;" vertex="1" parent="1">
+          <mxGeometry x="200" y="142" width="70" height="37.01" as="geometry" />
+        </mxCell>
+        <mxCell id="DZGBvKgO81pYHmkuGwiG-35" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="DZGBvKgO81pYHmkuGwiG-34" target="DZGBvKgO81pYHmkuGwiG-29">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="DZGBvKgO81pYHmkuGwiG-34" value="Clinicians &amp;amp; Non Clinicians" style="sketch=0;verticalLabelPosition=bottom;sketch=0;aspect=fixed;html=1;verticalAlign=top;strokeColor=none;fillColor=#000000;align=center;outlineConnect=0;pointerEvents=1;shape=mxgraph.citrix2.users;" vertex="1" parent="1">
+          <mxGeometry x="650" y="621.5" width="70" height="37.01" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
