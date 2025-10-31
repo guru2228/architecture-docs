@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Agent Gateway & Zero Trust in Agentic Systems</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #1a1a1a;
+      --accent: #0066cc;
+      --light-gray: #f5f5f5;
+      --border: #ddd;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .slide {
+      width: 90%;
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 2rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: white;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      page-break-inside: avoid;
+    }
+    h1 {
+      font-size: 2.2rem;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+    h2 {
+      font-size: 1.6rem;
+      margin-top: 1.5rem;
+      margin-bottom: 1rem;
+      color: #222;
+    }
+    h3 {
+      font-size: 1.3rem;
+      margin-top: 1.2rem;
+      margin-bottom: 0.8rem;
+    }
+    p {
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+    ul, ol {
+      margin-left: 1.5rem;
+      margin-bottom: 1.2rem;
+      line-height: 1.6;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.2rem 0;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 0.75rem;
+      text-align: left;
+    }
+    th {
+      background-color: var(--light-gray);
+      font-weight: 600;
+    }
+    code {
+      background: #f0f0f0;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+    .quote {
+      font-style: italic;
+      color: #555;
+      border-left: 3px solid var(--accent);
+      padding-left: 1rem;
+      margin: 1.2rem 0;
+    }
+    .placeholder {
+      background: #fafafa;
+      border: 2px dashed #ccc;
+      text-align: center;
+      padding: 2rem;
+      margin: 1.5rem 0;
+      color: #777;
+    }
+    .rfc {
+      font-size: 0.85em;
+      color: #666;
+      margin-top: -0.5rem;
+    }
+    pre {
+      background: #f8f8f8;
+      padding: 1rem;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: 0.95em;
+    }
+    .claim-table {
+      font-size: 0.9em;
+    }
+    .claim-table td, .claim-table th {
+      padding: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Existing slides (1 through STS Design Details) remain unchanged -->
+<!-- For brevity, we'll start from the new slides, but in full file all prior slides are included -->
+
+<!-- Slide 1: Title -->
+<div class="slide">
+  <h1>Agent Gateway & Zero Trust in Agentic Systems</h1>
+  <p><strong>Why Session Awareness and Identity Are Non-Negotiable</strong></p>
+  <p>Presented by: [Your Name/Team] | October 31, 2025</p>
+  <div class="quote">
+    “In agentic systems, every token is a key—and every prompt is a potential lockpick.”
+  </div>
+</div>
+
+<!-- Slide 2: What Is an Agent? -->
+<div class="slide">
+  <h2>What Is an Agent? Beyond Traditional Software</h2>
+  <p>An <strong>agent</strong> is an autonomous software entity powered by an LLM that can:</p>
+  <ul>
+    <li>Perceive its environment (via tools, APIs, context)</li>
+    <li>Reason over goals</li>
+    <li>Take actions (invoke tools, generate outputs, collaborate)</li>
+  </ul>
+
+  <h3>Key Differences</h3>
+  <table>
+    <tr><th>Traditional Software</th><th>Agentic System</th></tr>
+    <tr><td>Deterministic logic</td><td>Probabilistic reasoning</td></tr>
+    <tr><td>Explicit code paths</td><td>Emergent behavior</td></tr>
+    <tr><td>Input → Output</td><td>Context → Plan → Action → Reflect</td></tr>
+    <tr><td>Secrets handled via secure vaults</td><td>LLMs treat <em>everything</em> as text—including secrets</td></tr>
+  </table>
+
+  <div class="quote">
+    LLMs have <strong>no inherent concept of data vs. code vs. secrets</strong>. Everything is tokens.
+  </div>
+</div>
+
+<!-- Slide: Prompt/Context Injection Threat -->
+<div class="slide">
+  <h2>The Prompt/Context Injection Threat</h2>
+  <p><strong>Threat Vectors:</strong></p>
+  <ul>
+    <li><strong>Prompt Injection</strong>: Malicious user input tricks the agent.</li>
+    <li><strong>Context Poisoning</strong>: Corrupted context from tools misleads the agent.</li>
+  </ul>
+
+  <p><strong>Real-World Impact:</strong></p>
+  <ul>
+    <li>Agent logs or outputs may leak <code>ENV_VARS</code>, <code>API keys</code>, or <code>bearer tokens</code>.</li>
+    <li>Example: Tool returns <code>{"auth": "Bearer abc123..."}</code> → Agent includes it in summary → Exposed.</li>
+  </ul>
+
+  <div class="quote">
+    In agentic systems, <strong>data leakage = credential leakage</strong>.
+  </div>
+</div>
+
+<!-- Slide: Identity Crisis -->
+<div class="slide">
+  <h2>The Identity Crisis in Agentic Systems</h2>
+  <p>Traditional identity models fail because they:</p>
+  <ul>
+    <li>Are <strong>static, shared, and long-lived</strong></li>
+    <li>Lack <strong>runtime context</strong> (e.g., which user initiated the workflow?)</li>
+    <li>Offer <strong>no cryptographic proof</strong> of possession</li>
+    <li>Cannot represent <strong>ephemeral workloads</strong></li>
+  </ul>
+
+  <p><strong>Consequence:</strong> Agents become unverifiable actors—enabling impersonation and privilege escalation.</p>
+
+  <div class="quote">
+    Solution: A <strong>Zero Trust identity fabric</strong> built on workload identity, session context, and cryptographic proof.
+  </div>
+</div>
+
+<!-- Slide: What Is Agent Identity? -->
+<div class="slide">
+  <h2>What Is Agent Identity?</h2>
+  <p>A <strong>cryptographically verifiable, short-lived, context-rich identity</strong> assigned at runtime, representing:</p>
+  <ul>
+    <li><strong>Who it is</strong> (SPIFFE ID)</li>
+    <li><strong>On whose behalf it acts</strong> (user/app subject)</li>
+    <li><strong>What session it belongs to</strong> (USID, WSID, ASID)</li>
+  </ul>
+
+  <p><strong>Why Required?</strong></p>
+  <ul>
+    <li>Enables <strong>least-privilege access</strong></li>
+    <li>Supports <strong>auditability</strong> and <strong>non-repudiation</strong></li>
+    <li>Prevents <strong>credential leakage</strong> (no static secrets)</li>
+  </ul>
+
+  <div class="quote">
+    Identity is not a secret—it’s a <strong>verifiable claim</strong>.
+  </div>
+</div>
+
+<!-- Slide: SPIFFE/SPIRE -->
+<div class="slide">
+  <h2>SPIFFE/SPIRE: The Foundation of Workload Identity</h2>
+  <p><strong>SPIFFE</strong>: Secure Production Identity Framework For Everyone (CNCF standard). Defines <strong>SVIDs</strong> (X.509 or JWT).</p>
+  <p><strong>SPIRE</strong>: Open-source implementation that issues SVIDs based on attestation (e.g., Kubernetes pod).</p>
+
+  <p><strong>Why Required for Agents?</strong></p>
+  <ul>
+    <li>Agents are <strong>ephemeral workloads</strong></li>
+    <li>Provides <strong>automatic, short-lived identity</strong></li>
+    <li>Eliminates need for <strong>client secrets</strong></li>
+  </ul>
+
+  <p><strong>Implementation:</strong></p>
+  <ul>
+    <li>Each agent attested by SPIRE Agent</li>
+    <li>Receives JWT-SVID: <code>spiffe://example.org/agents/order-fulfillment</code></li>
+    <li>Gateway validates SVID on every call</li>
+  </ul>
+</div>
+
+
+
+<!-- Slide: Agent Gateway vs API Gateway -->
+<div class="slide">
+  <h2>Agent Gateway vs. Traditional API Gateway</h2>
+  <p>While both sit at the edge, their purposes diverge fundamentally in agentic systems.</p>
+
+  <table>
+    <tr>
+      <th>Capability</th>
+      <th>Traditional API Gateway</th>
+      <th>Agent Gateway</th>
+    </tr>
+    <tr>
+      <td><strong>Primary Role</strong></td>
+      <td>Route & throttle REST/gRPC calls</td>
+      <td>Orchestrate <em>session-aware</em> agent interactions</td>
+    </tr>
+    <tr>
+      <td><strong>State Model</strong></td>
+      <td>Stateless (per-request)</td>
+      <td><strong>Session-aware</strong> (tracks USID, WSID, ASID, MSID)</td>
+    </tr>
+    <tr>
+      <td><strong>Identity</strong></td>
+      <td>API keys, OAuth2 tokens</td>
+      <td><strong>SPIFFE workload identity + OBO + DPoP</strong></td>
+    </tr>
+    <tr>
+      <td><strong>Protocols</strong></td>
+      <td>HTTP/REST, gRPC</td>
+      <td><strong>AG-UI, A2A, MCP, JSON-RPC, WebSockets, HTTP/2 streaming</strong></td>
+    </tr>
+    <tr>
+      <td><strong>Security Focus</strong></td>
+      <td>Rate limiting, WAF, authN</td>
+      <td><strong>Zero Trust, prompt/context protection, token binding, redaction</strong></td>
+    </tr>
+    <tr>
+      <td><strong>Observability</strong></td>
+      <td>Request logs, metrics</td>
+      <td><strong>End-to-end session tracing, agent lineage, tool audit</strong></td>
+    </tr>
+  </table>
+
+  <div class="quote">
+    An API gateway sees <em>requests</em>. An Agent Gateway sees <em>conversations, workflows, and identities</em>.
+  </div>
+</div>
+
+<!-- Slide: Why Session Awareness? -->
+<div class="slide">
+  <h2>Why Session Awareness Is Non-Negotiable</h2>
+  <p>Agentic systems involve <strong>multi-hop, stateful interactions</strong> across heterogeneous actors. The gateway must understand <em>which session</em> each call belongs to.</p>
+
+  <h3>Four Critical Session Types</h3>
+  <ul>
+    <li><strong>User Session (USID)</strong>: Human user’s authenticated context (e.g., <code>X-User-Session-Id</code>)</li>
+    <li><strong>Workflow Session (WSID)</strong>: Multi-step task spanning agents/tools (e.g., “Order Fulfillment”)</li>
+    <li><strong>Agent Session (ASID)</strong>: Runtime identity of a specific agent instance</li>
+    <li><strong>MCP Session (MSID)</strong>: Context-bound interaction between agent and tool</li>
+  </ul>
+
+  <p><strong>Without session awareness, the gateway cannot:</strong></p>
+  <ul>
+    <li>Enforce <strong>least privilege per workflow step</strong></li>
+    <li>Apply <strong>kill switches</strong> to terminate compromised sessions</li>
+    <li>Prevent <strong>token misuse</strong> across session boundaries</li>
+    <li>Correlate <strong>audit logs</strong> across user → agent → tool</li>
+  </ul>
+
+  <div class="quote">
+    Session awareness turns the gateway from a <em>proxy</em> into the <strong>central nervous system</strong> of agentic security.
+  </div>
+</div>
+
+<!-- Slide: Reference Architecture -->
+<div class="slide">
+  <h2>Reference Architecture: Control Plane & Data Plane</h2>
+
+  <div class="placeholder">
+    [INSERT ARCHITECTURE DIAGRAM HERE]<br>
+    <em>Shows separation of Control Plane (below) and Data Plane (above)</em>
+  </div>
+
+  <h3>Data Plane — Runtime Execution Path</h3>
+  <ul>
+    <li><strong>Session-Aware Agent Gateway</strong>: Routes all agent interactions (AG-UI, REST, A2A, MCP) with DPoP/mTLS enforcement.</li>
+    <li><strong>Agents</strong>: Run with ephemeral identities; communicate via mTLS/JSON-RPC or MCP over Gateway.</li>
+    <li><strong>MCP Tools</strong>: Accessed only through Gateway with scoped tokens and session context (MSID).</li>
+    <li><strong>Flows:</strong> Browser → AG-UI → Gateway → Agents → Tools; App Server → REST → Gateway → Agents.</li>
+  </ul>
+
+  <h3>Control Plane — Policy, Identity, and Lifecycle Management</h3>
+  <ul>
+    <li><strong>SPIRE Server</strong>: Issues SVIDs (SPIFFE IDs) for agents/services via mTLS trust chains.</li>
+    <li><strong>STS (Token Exchange)</strong>: Issues OBO tokens (RFC 8693) for delegation; integrates with Gateway for introspect/revoke/kill.</li>
+    <li><strong>Policy Engine (OPA/REGO)</strong>: Evaluates session, identity, and scope policies before token issuance or routing.</li>
+    <li><strong>Session Store (Redis)</strong>: Maintains USID/WSID/ASID/MSID graph for real-time kill propagation.</li>
+    <li><strong>KMS / JWKS</strong>: Manages signing keys for JWTs and DPoP verification.</li>
+    <li><strong>Observability</strong>: Collects traces, logs, metrics from Gateway and agents for audit and correlation.</li>
+  </ul>
+
+  <p><strong>Separation of Concerns:</strong> Control plane manages identity, policy, and state. Data plane executes workflows securely under those constraints.</p>
+</div>
+
+
+<!-- Slide: MCP Session — Stateful Agent-to-Tool Interaction -->
+<div class="slide">
+  <h2>MCP Session: Stateful Agent-to-Tool Interaction</h2>
+
+  <h3>What Is an MCP Session?</h3>
+  <p>A <strong>stateful conversation channel</strong> between an MCP client (e.g., Scheduling Agent) and MCP server (e.g., EMR/PMS MCP), using <strong>JSON-RPC 2.0</strong> over Streamable HTTP or stdio.</p>
+  <p>On initialization, the server issues an <code>Mcp-Session-Id</code>; the client must include this header on all subsequent requests to preserve context.</p>
+  <p>JSON-RPC <code>id</code> values must be <strong>unique per session</strong> for correlation of multi-step workflows.</p>
+
+  <h3>End-to-End Flow (One MCP Session)</h3>
+  <p><strong>0) Security & Session Setup (outside MCP body)</strong></p>
+  <ul>
+    <li>Gateway → STS: OBO token exchange for <code>aud=emr-pms-mcp</code> (DPoP/mTLS-bound, short TTL)</li>
+    <li>Client connects with headers:
+      <ul>
+        <li><code>Authorization: Bearer <OBO></code></li>
+        <li><code>traceparent</code>, <code>X-Workflow-Session-Id: WSID-…</code>, <code>X-Agent-Session-Id: ASID-…</code></li>
+      </ul>
+    </li>
+    <li>Server responds with <code>Mcp-Session-Id: MSID-…</code> → client echoes it on every call</li>
+  </ul>
+
+  <p><strong>1) Capability Discovery (once per session)</strong></p>
+  <ul>
+    <li><code>tools/list</code> → confirms available methods: <code>providers.search</code>, <code>slots.find</code>, <code>appointment.book</code>, etc.</li>
+  </ul>
+
+  <p><strong>2) Multi-Step Business Calls (same MSID)</strong></p>
+  <pre>{
+  "jsonrpc": "2.0",
+  "id": "slot-003",
+  "method": "slots.find",
+  "params": {
+    "provider_id": "prov-9",
+    "date": "2025-11-03",
+    "duration_min": 30,
+    "_meta": { "idempotency_key": "slot-003" }
+  }
+}</pre>
+  <p><em>→ Unique <code>id</code>, session-scoped <code>MSID</code>, and <code>_meta</code> for non-LLM metadata (e.g., idempotency, patient ID)</em></p>
+
+  <p><strong>Why One Session (MSID) for All Steps?</strong></p>
+  <ul>
+    <li>Avoids re-negotiating capabilities</li>
+    <li>Enables server-side context/caching (e.g., filtered providers, availability windows)</li>
+    <li>Allows precise correlation of all requests within the workflow</li>
+  </ul>
+
+  <p><strong>3) Termination / Reconnection</strong></p>
+  <ul>
+    <li><strong>Normal close</strong>: Client ends cleanly; server may support <code>DELETE /mcp</code> with <code>Mcp-Session-Id</code></li>
+    <li><strong>Reconnect</strong>: Reuse same <code>MSID</code> after network drop (server validates session liveness)</li>
+  </ul>
+
+  <h3>Responsibilities</h3>
+  <table>
+    <tr>
+      <th>Client (Scheduling Agent)</th>
+      <td>
+        <ul>
+          <li>Manages <code>MSID</code>, ensures unique JSON-RPC <code>id</code>s</li>
+          <li>Uses <code>_meta</code> for idempotency/correlation (invisible to LLM)</li>
+          <li>Rotates OBO tokens mid-session if needed (same <code>MSID</code>, fresh token)</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <th>Server (EMR/PMS MCP)</th>
+      <td>
+        <ul>
+          <li>Issues/validates <code>Mcp-Session-Id</code>; rejects missing headers</li>
+          <li>Advertises tools; executes requests; maintains temporary state (e.g., slot holds) tied to <code>MSID</code></li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <th>Gateway</th>
+      <td>
+        <ul>
+          <li>Enforces Zero Trust per call: token introspection, scope/aud check, DPoP/mTLS validation</li>
+          <li>Propagates <code>WSID</code>/<code>ASID</code>/<code>MSID</code></li>
+          <li>Triggers new OBO exchange if <code>aud</code> changes (e.g., search → booking)</li>
+        </ul>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<!-- Slide: What Is an Agent Session (ASID)? -->
+<div class="slide">
+  <h2>What Is an Agent Session (ASID)?</h2>
+
+  <h3>Definition</h3>
+  <p>An <strong>Agent Session (ASID)</strong> is a scoped, ephemeral execution context for a single agent “episode” (e.g., Care Coordinator agent run #42). It:</p>
+  <ul>
+    <li>Sits under a <strong>Workflow Session (WSID)</strong></li>
+    <li>Links to any <strong>MCP Sessions (MSID)</strong> the agent opens</li>
+    <li>Traces back to a <strong>User Session (USID)</strong> when user-initiated</li>
+  </ul>
+
+  <h3>Why It Exists</h3>
+  <ul>
+    <li>Provides a <strong>narrow blast radius</strong>: short-lived, least-privileged, revocable</li>
+    <li>Creates a <strong>context envelope</strong> for per-run policy, identity, tools, memory, and telemetry</li>
+    <li>Enables <strong>clean audit & kill</strong>: terminate everything spawned by this agent run without disrupting the wider workflow</li>
+  </ul>
+</div>
+
+<!-- Slide: Where ASID Fits — The Session ID Stack -->
+<div class="slide">
+  <h2>Where ASID Fits: The Session ID Stack</h2>
+
+  <pre style="font-size: 1.1em; background: #f8f8f8; padding: 1rem; border-radius: 6px;">
+USID (User Session) ── the human/app identity session
+   └─ WSID (Workflow Session) ── the end-to-end business transaction
+        └─ ASID (Agent Session) ── one agent’s execution episode
+             └─ MSID (MCP Session) ── stateful tool channel(s) the agent opens
+  </pre>
+
+  <p><strong>Relationships:</strong></p>
+  <ul>
+    <li>A single <strong>WSID</strong> may spawn many <strong>ASIDs</strong> (e.g., Coordinator → Analyzer → Scheduler)</li>
+    <li>Each <strong>ASID</strong> may open one or more <strong>MSIDs</strong> (e.g., search, slots, booking)</li>
+  </ul>
+</div>
+
+<!-- Slide: ASID Lifecycle (at the Gateway) -->
+<div class="slide">
+  <h2>ASID Lifecycle (at the Gateway)</h2>
+
+  <ul>
+    <li><strong>Create</strong>: On first call to an agent, Gateway allocates <code>ASID</code> and stamps it into logs + tokens.</li>
+    <li><strong>Propagate</strong>: <code>ASID</code> is added to headers/claims on every hop (Agent ↔ Gateway ↔ Tools).</li>
+    <li><strong>Fork/Join</strong>: New child <code>ASID</code>s for A2A calls; parent/child linkage maintained for lineage.</li>
+    <li><strong>Rotate</strong>: Tokens renewed (short TTL) within the same <code>ASID</code>; <code>ASID</code> itself remains stable.</li>
+    <li><strong>Finalize</strong>: On success/failure/timeout, Gateway closes <code>ASID</code>; <code>kill(ASID)</code> tears down streams, revokes OBO tokens, and cancels descendant <code>MSIDs</code>.</li>
+  </ul>
+</div>
+
+<!-- Slide: How ASID Enriches Context -->
+<div class="slide">
+  <h2>How ASID Enriches Context</h2>
+  <p>The ASID carries a <strong>context envelope</strong> that the Gateway and STS attach to every call for situational awareness:</p>
+
+  <table class="claim-table">
+    <tr><th>Context Facet</th><th>What It Adds to Each Call</th></tr>
+    <tr><td><strong>Identity lineage</strong></td><td><code>sub</code> (end user/app), <code>act</code> (current actor), <code>ASID</code> correlation; prevents identity confusion across agents.</td></tr>
+    <tr><td><strong>Security constraints</strong></td><td>Sender-constrained tokens (DPoP/mTLS), short TTLs, audience-scoped OBO, replay resistance bound to the ASID’s channel.</td></tr>
+    <tr><td><strong>Policy & guardrails</strong></td><td>Tool allow-lists, PII redaction profile, output scanning level, rate/timeout budgets, RUAI gates tied to the ASID.</td></tr>
+    <tr><td><strong>Execution config</strong></td><td>Model profile (e.g., temperature limits), cost/time budgets, eval hooks, concurrency caps for this run.</td></tr>
+    <tr><td><strong>Data/Memory scope</strong></td><td>Read views to approved datasets, ephemeral working set (e.g., filtered providers), retrieval constraints—<em>no secrets in prompts</em>.</td></tr>
+    <tr><td><strong>Observability</strong></td><td><code>traceparent</code>, ASID tags, per-run metrics (latency, tokens, tool calls), evaluation artifacts.</td></tr>
+    <tr><td><strong>Kill & recovery</strong></td><td>One-shot kill of the ASID graph (agent + MCP sessions); resumability rules if policy allows.</td></tr>
+  </table>
+</div>
+
+<!-- Slide: ASID in Headers & Tokens -->
+<div class="slide">
+  <h2>ASID in Headers & Tokens (Examples)</h2>
+
+  <h3>HTTP Headers (Attached by Gateway)</h3>
+  <pre>X-User-Session-Id: USID-9f1f...
+X-Workflow-Session-Id: WSID-a9c7...
+X-Agent-Session-Id: ASID-cc-001
+X-MCP-Session-Id: MSID-clinical-001   # only on MCP calls
+traceparent: 00-4bf9...-00f0...-01</pre>
+
+  <h3>STS-Issued OBO Token (Claims Excerpt)</h3>
+  <pre>{
+  "iss": "https://sts.example.org",
+  "sub": "user:9e4b0c8d...",
+  "act": {"sub": "spiffe://org/.../agent/coord"},
+  "aud": "clinical-mcp",
+  "scope": "mcp.read gaps.search",
+  "cnf": {"x5t#S256": "<mtls-thumbprint>"},
+  "usid": "USID-9f1f...",
+  "wsid": "WSID-a9c7...",
+  "asid": "ASID-cc-001",
+  "msid": "MSID-clinical-001",
+  "exp": 1767106200,
+  "jti": "b3b8f5a7..."
+}</pre>
+
+  <h3>Introspection Response (Adds Runtime State)</h3>
+  <pre>{
+  "active": true,
+  "wsid": "WSID-a9c7...",
+  "asid": "ASID-cc-001",
+  "msid": "MSID-clinical-001",
+  "policy": {"tool_allowlist": ["providers.search","slots.find","appointment.book"]},
+  "budget": {"max_tokens": 200k, "max_duration_sec": 180},
+  "risk": {"pii_mode": "strict"}
+}</pre>
+</div>
+
+<!-- Slide: ASID vs WSID vs MSID -->
+<div class="slide">
+  <h2>ASID vs WSID vs MSID — Quick Contrasts</h2>
+
+  <table>
+    <tr>
+      <th>Session Type</th>
+      <th>Scope</th>
+      <th>Lifespan</th>
+      <th>Purpose</th>
+    </tr>
+    <tr>
+      <td><strong>WSID</strong><br>(Workflow)</td>
+      <td>End-to-end business transaction<br>(e.g., “close care gaps for member X”)</td>
+      <td>Minutes to hours</td>
+      <td>Aggregates many agents/tools; defines business outcome</td>
+    </tr>
+    <tr>
+      <td><strong>ASID</strong><br>(Agent)</td>
+      <td>Single agent’s reasoning & action episode</td>
+      <td>Seconds to minutes</td>
+      <td>Carries per-agent budgets, tools, guardrails, and identity</td>
+    </tr>
+    <tr>
+      <td><strong>MSID</strong><br>(MCP)</td>
+      <td>Stateful tool channel</td>
+      <td>Request to multi-step operation</td>
+      <td>Supports contextful tool interactions (search → hold → book)</td>
+    </tr>
+  </table>
+</div>
+
+<!-- Slide: Examples of ASID-Level Context in Flows -->
+<div class="slide">
+  <h2>Examples of ASID-Level Context in Your Flows</h2>
+
+  <ul>
+    <li><strong>AG-UI (User → Coordinator)</strong>: ASID sets redaction profile so Gateway strips PHI before model output; stream carries ASID for audit and <code>kill-on-anomaly</code>.</li>
+    <li><strong>A2A (Coordinator → Analyzer)</strong>: New ASID minted for Analyzer with narrower scopes (read-only clinical tools) while preserving WSID; policy blocks write operations.</li>
+    <li><strong>MCP (Analyzer → Clinical MCP)</strong>: ASID links to <code>MSID-clinical-001</code>; server caches provider filters under MSID, while ASID enforces booking budgets and eval hooks.</li>
+    <li><strong>Scheduling Agent</strong>: ASID has distinct allow-lists (<code>appointment.hold</code>, <code>appointment.book</code>), stricter eval gates, and 2-minute hold TTL—so a stuck run can be killed without orphaning holds.</li>
+  </ul>
+
+  <p><strong>Result:</strong> Every agent run is isolated, governed, observable, and revocable—by design.</p>
+</div>
+
+<!-- Slide: What Is a Session-Aware Agent Gateway? -->
+<div class="slide">
+  <h2>What Is a Session-Aware Agent Gateway?</h2>
+  <p>A <strong>stateful policy & identity broker</strong> that sits in front of agents and tools. Unlike stateless API gateways, it tracks and enforces sessions across every hop in an agentic workflow.</p>
+
+  <p>It binds <strong>identity, purpose, permissions, transport, and telemetry</strong> to a session graph:</p>
+  <ul>
+    <li><strong>USID</strong> = User Session</li>
+    <li><strong>WSID</strong> = Workflow / Business Transaction</li>
+    <li><strong>ASID</strong> = Agent Run (episode)</li>
+    <li><strong>MSID</strong> = MCP Tool Channel</li>
+  </ul>
+
+  <p><strong>Core Capabilities:</strong></p>
+  <ul>
+    <li>Terminates/mediates protocols (HTTP/1.1, HTTP/2, WS, SSE, JSON-RPC)</li>
+    <li>Performs delegation via <strong>STS/OBO</strong></li>
+    <li>Enforces <strong>sender-constrained tokens</strong> (DPoP/mTLS)</li>
+    <li>Applies <strong>AI-specific policy</strong> (prompt filters, tool allow-lists, output scanning)</li>
+    <li>Provides <strong>kill-switch fan-out</strong> across the session graph</li>
+  </ul>
+</div>
+
+<!-- Slide: Why It’s Non-Negotiable (Zero-Trust Alignment) -->
+<div class="slide">
+  <h2>Why It’s Non-Negotiable: Zero-Trust Alignment</h2>
+  <p><strong>Zero Trust = never trust, always verify, least privilege, continuous enforcement.</strong></p>
+  <p>Agentic systems expand the attack surface (prompt injection, token leakage, tool misuse). A stateless gateway <em>cannot</em> enforce ZT—it lacks per-run context.</p>
+
+  <p><strong>Session awareness enables:</strong></p>
+  <ul>
+    <li>Bind identity to purpose per hop: <em>who is acting for whom, for what audience?</em></li>
+    <li>Continuous authZ with <strong>short-lived, scoped OBO tokens</strong> (not raw IdP tokens)</li>
+    <li><strong>Replay prevention</strong>: leaked tokens fail without DPoP key or mTLS cert</li>
+    <li><strong>Tool constraints</strong>: allow-lists + output redaction per ASID</li>
+    <li><strong>Deterministic audit & kill</strong>: <code>kill(ASID/WSID)</code> revokes tokens + tears down streams</li>
+    <li><strong>End-to-end telemetry correlation</strong> across USID/WSID/ASID/MSID</li>
+  </ul>
+</div>
+
+<!-- Slide: Core Responsibilities (How It Works) -->
+<div class="slide">
+  <h2>Core Responsibilities: How It Works</h2>
+
+  <h3>Authenticate</h3>
+  <ul>
+    <li>Edge: OIDC + DPoP (browser/native)</li>
+    <li>Service↔Service: SPIFFE/SPIRE SVID + mTLS</li>
+  </ul>
+
+  <h3>Delegate</h3>
+  <ul>
+    <li>STS / OAuth 2.0 Token Exchange (OBO) → short-lived, audience-scoped tokens</li>
+    <li>Sender-constraint: DPoP (<code>cnf.jkt</code>) or mTLS (<code>cnf."x5t#S256"</code>)</li>
+  </ul>
+
+  <h3>Authorize</h3>
+  <ul>
+    <li>Evaluate policy using session tuple (USID/WSID/ASID/MSID), scopes, audience, risk</li>
+    <li>Enforce tool allow-lists, rate/time budgets, RUAI gates</li>
+  </ul>
+
+  <h3>Mediate Protocols</h3>
+  <ul>
+    <li>JSON-RPC over HTTP/2, WebSockets, SSE</li>
+    <li>MCP session headers/handshakes; A2A routing</li>
+  </ul>
+
+  <h3>Observe & Govern</h3>
+  <ul>
+    <li>Structured logs + traces (<code>traceparent</code>) with session IDs</li>
+    <li>Introspect / Revoke / Kill endpoints</li>
+  </ul>
+</div>
+
+<!-- Slide: Session Model — Context the Gateway Carries -->
+<div class="slide">
+  <h2>Session Model: Context the Gateway Carries</h2>
+  <p>Each request carries a <strong>session envelope</strong>:</p>
+
+  <table class="claim-table">
+    <tr><th>Field</th><th>Purpose</th></tr>
+    <tr><td><strong>USID</strong></td><td>End-user/app session (who originated the work)</td></tr>
+    <tr><td><strong>WSID</strong></td><td>Business transaction (why we’re doing it)</td></tr>
+    <tr><td><strong>ASID</strong></td><td>Agent run (who is acting now; budgets, tool scopes)</td></tr>
+    <tr><td><strong>MSID</strong></td><td>MCP channel (stateful tool conversation)</td></tr>
+    <tr><td><strong>Actor Chain</strong></td><td><code>sub</code> (subject), <code>act</code> (current actor) in tokens</td></tr>
+    <tr><td><strong>Sender Constraint</strong></td><td>DPoP key thumbprint or mTLS cert hash</td></tr>
+    <tr><td><strong>Policy Snapshot</strong></td><td>Tool allow-list, PII redaction mode, eval hooks</td></tr>
+    <tr><td><strong>Telemetry</strong></td><td><code>traceparent</code>, cost/time budgets, rate limits</td></tr>
+  </table>
+
+  <p>This enriches context so decisions are precise, revocations are surgical, and audits are complete.</p>
+</div>
+
+<!-- Slide: API Gateway vs Agent Gateway -->
+<div class="slide">
+  <h2>API Gateway vs. Session-Aware Agent Gateway</h2>
+  <table>
+    <tr>
+      <th>Capability</th>
+      <th>API Gateway (Typical)</th>
+      <th>Session-Aware Agent Gateway</th>
+    </tr>
+    <tr>
+      <td><strong>State</strong></td>
+      <td>Stateless, per-request</td>
+      <td>Stateful session graph (USID/WSID/ASID/MSID)</td>
+    </tr>
+    <tr>
+      <td><strong>Delegation</strong></td>
+      <td>Pass-through bearer tokens</td>
+      <td>STS/OBO per hop, least privilege</td>
+    </tr>
+    <tr>
+      <td><strong>Replay Defense</strong></td>
+      <td>None / limited</td>
+      <td>DPoP or mTLS-bound tokens</td>
+    </tr>
+    <tr>
+      <td><strong>Identity</strong></td>
+      <td>Client ID/secret</td>
+      <td>SPIFFE/SPIRE workload identity</td>
+    </tr>
+    <tr>
+      <td><strong>Protocols</strong></td>
+      <td>REST/gRPC</td>
+      <td>REST/WS/SSE + JSON-RPC, MCP, A2A</td>
+    </tr>
+    <tr>
+      <td><strong>AI Policy</strong></td>
+      <td>N/A</td>
+      <td>Prompt/input filters, tool allow-lists, output scanning</td>
+    </tr>
+    <tr>
+      <td><strong>Kill Switch</strong></td>
+      <td>Coarse (IP/rate)</td>
+      <td><code>kill(ASID/WSID/MSID)</code> cascade revoke & teardown</td>
+    </tr>
+    <tr>
+      <td><strong>Audit</strong></td>
+      <td>Per-request logs</td>
+      <td>End-to-end lineage across all hops</td>
+    </tr>
+  </table>
+</div>
+
+<!-- Slide: Architecture — Control Plane vs Data Plane -->
+<div class="slide">
+  <h2>Architecture: Control Plane vs Data Plane</h2>
+
+  <h3>Data Plane (Request Flow)</h3>
+  <p><code>Ingress (HTTP/2/WS/SSE)</code> → <strong>AuthN</strong> (OIDC+DPoP / mTLS SVID) → <strong>STS/OBO</strong> → <strong>Policy Engine</strong> → <strong>Protocol Adapters</strong> (AG-UI/A2A/MCP) → Agents/Tools</p>
+
+  <h3>Control Plane (Orchestration)</h3>
+  <ul>
+    <li><strong>SPIRE</strong>: CA, workload attestation</li>
+    <li><strong>Policy Engine</strong> (e.g., OPA/Rego)</li>
+    <li><strong>STS</strong>: Token exchange, introspect, revoke, kill</li>
+    <li><strong>Session Store</strong>: USID/WSID/ASID/MSID graph with TTLs</li>
+    <li><strong>KMS / JWKS</strong>: Key management for DPoP/JWT signing</li>
+    <li><strong>Observability</strong>: Traces, metrics, logs with session tags</li>
+  </ul>
+</div>
+
+<!-- Slide: Threats & Mitigations -->
+<div class="slide">
+  <h2>Threats & Mitigations: Why Sessions Matter</h2>
+  <table>
+    <tr>
+      <th>Threat</th>
+      <th>Without Sessions</th>
+      <th>With Session-Aware Gateway</th>
+    </tr>
+    <tr>
+      <td>Prompt injection → secret exfiltration</td>
+      <td>Bearers leak & replayable</td>
+      <td>DPoP/mTLS-bound OBO tokens + output scanning/redaction per ASID</td>
+    </tr>
+    <tr>
+      <td>Tool misuse / over-privilege</td>
+      <td>Global tokens, broad perms</td>
+      <td>Audience-scoped OBO + allow-lists per ASID</td>
+    </tr>
+    <tr>
+      <td>Lateral movement</td>
+      <td>No run boundaries</td>
+      <td>ASID-scoped budgets; A2A gets new ASIDs</td>
+    </tr>
+    <tr>
+      <td>Orphaned runs/streams</td>
+      <td>No reliable teardown</td>
+      <td><code>kill(ASID/WSID/MSID)</code> revokes tokens & closes sockets</td>
+    </tr>
+    <tr>
+      <td>Weak workload identity</td>
+      <td>Shared client secrets</td>
+      <td>SPIFFE/SPIRE SVIDs + mTLS rotation</td>
+    </tr>
+  </table>
+</div>
+
+<!-- Slide: KPIs / SLOs for Zero-Trust Agent Gateway -->
+<div class="slide">
+  <h2>KPIs / SLOs for Zero-Trust Agent Gateway</h2>
+  <ul>
+    <li><strong>MTTK</strong> (Mean-Time-to-Kill) a session graph: ≤ <strong>2 seconds</strong></li>
+    <li><strong>Token TTLs</strong>: access ≤ <strong>10 min</strong>; MCP session token ≤ <strong>30 min</strong></li>
+    <li><strong>Sender-constrained coverage</strong>: > <strong>99%</strong> of calls DPoP/mTLS-bound</li>
+    <li><strong>Policy enforcement</strong>: <strong>100%</strong> of agent→tool calls gated</li>
+    <li><strong>Secret-leak incidents</strong>: <strong>0</strong> attributable to gateway-mediated flows</li>
+  </ul>
+</div>
+
+<!-- Slide: STS Overview -->
+<div class="slide">
+  <h2>Secure Token Exchange Service (STS): The Identity Broker</h2>
+  <p>A centralized service that exchanges one identity token for another—enriched with session context and delegated permissions.</p>
+
+  <p><strong>Why Required?</strong></p>
+  <ul>
+    <li>Agents act <strong>on behalf of users</strong></li>
+    <li>Raw SPIFFE lacks <strong>user context</strong></li>
+    <li>Need to <strong>chain identities</strong> securely (User → App → Agent → Tool)</li>
+  </ul>
+
+  <p><strong>Design:</strong></p>
+  <ul>
+    <li>Endpoint: <code>POST /token/exchange</code></li>
+    <li>Input: <code>{ "subject_token": "...", "actor_svid": "...", "session_context": { usid, wsid } }</code></li>
+    <li>Output: <strong>JWT with OBO claims + DPoP confirmation</strong></li>
+  </ul>
+</div>
+
+<!-- Slide: STS Design Details -->
+<div class="slide">
+  <h2>STS Design: Standards-Based, Session-Aware Token Orchestration</h2>
+
+  <h3>What It Is</h3>
+  <p>An <strong>OAuth 2.0–based Security Token Service</strong> that mints short-lived, scoped tokens by exchanging upstream identities—supporting delegation/impersonation patterns.</p>
+  <p class="rfc">RFC 8693 (Token Exchange), RFC 7662 (Introspection), RFC 7009 (Revocation)</p>
+
+  <h3>Why Required</h3>
+  <ul>
+    <li>Agents <strong>shouldn’t forward raw user/app tokens</strong> (principle of least exposure).</li>
+    <li>Enforces <strong>least privilege per hop</strong> and preserves <strong>subject/actor audit chains</strong>.</li>
+    <li>Central point to <strong>introspect, revoke tokens</strong>, and <strong>fan-out session kill signals</strong> across the agent graph.</li>
+  </ul>
+
+  <h3>How We’ll Design/Implement</h3>
+  <ul>
+    <li><code>POST /sts/exchange</code> (RFC 8693) → issues access tokens for gateway/agent/tool scopes.</li>
+    <li><code>POST /sts/introspect</code> (RFC 7662) → returns token status and claims.</li>
+    <li><code>POST /sts/revoke</code> (RFC 7009) + <code>POST /sts/kill</code> → revoke token & cascade session-graph termination.</li>
+  </ul>
+  <p>Store <code>USID/WSID/ASID/MSID</code> and token metadata in <strong>Redis</strong>; publish kill events that the Gateway enforces in real time.</p>
+  <p>All tokens are <strong>sender-constrained</strong> via <strong>DPoP or mTLS</strong>—never bearer-only.</p>
+</div>
+
+<!-- NEW SLIDE: STS Design (Interfaces & Claims) -->
+<div class="slide">
+  <h2>STS Design (Interfaces & Claims)</h2>
+
+  <h3>Standardized Interfaces</h3>
+  <ul>
+    <li><code>POST /sts/exchange</code> → returns <code>{ access_token, token_type, expires_in, scope, cnf }</code> <span class="rfc">(RFC 8693)</span></li>
+    <li><code>POST /sts/introspect</code> → returns <code>{ active, sub, act, scope, aud, exp, usid, wsid, asid, msid }</code> <span class="rfc">(RFC 7662)</span></li>
+    <li><code>POST /sts/revoke</code> → acknowledges token revocation <span class="rfc">(RFC 7009)</span></li>
+    <li><code>POST /sts/kill</code> → <em>internal</em>: deactivates a session graph and revokes all descendant tokens</li>
+  </ul>
+
+  <h3>Token Claims Structure</h3>
+  <p><strong>Standard OAuth/JWT:</strong> <code>iss</code>, <code>sub</code>, <code>aud</code>, <code>exp</code>, <code>scope</code>, <code>act</code> (actor chain)</p>
+  <p><strong>Sender Constraint:</strong> <code>cnf.jkt</code> (DPoP JWK thumbprint) or <code>cnf."x5t#S256"</code> (mTLS cert hash) <span class="rfc">(RFC 9449, RFC 8705)</span></p>
+  <p><strong>Session Graph:</strong> <code>usid</code>, <code>wsid</code>, <code>asid</code>, <code>msid</code> (private claims namespace)</p>
+</div>
+
+<!-- NEW SLIDE: STS Service Token Spec & Sample -->
+<div class="slide">
+  <h2>STS Service Token Spec & Sample</h2>
+
+  <h3>What It Is</h3>
+  <p>A short-lived, sender-constrained JWT access token minted by the STS during OBO delegation; it preserves subject/actor identity and binds to a session graph (<code>USID/WSID/ASID/MSID</code>).</p>
+
+  <h3>Why It’s Required</h3>
+  <ul>
+    <li>Enforces <strong>least privilege per hop</strong> (no raw end-user tokens passed to agents/tools)</li>
+    <li>Enables <strong>replay resistance</strong> (DPoP or mTLS binding)</li>
+    <li>Centralizes <strong>revocation/introspection</strong> and <strong>session kill fan-out</strong></li>
+    <li>Gives complete, queryable <strong>audit chain</strong>: who acted, on behalf of whom, for what audience, within which session(s)</li>
+  </ul>
+
+  <h3>Token Profile (Design)</h3>
+  <ul>
+    <li><strong>Format:</strong> JWT (compact JWS)</li>
+    <li><strong>Signing:</strong> EdDSA (Ed25519) or ES256; KMS-backed keys; <code>kid</code> in header; JWKS at <code>/sts/jwks</code></li>
+    <li><strong>Lifetime:</strong> ≤ 10 minutes (no refresh; re-exchange via STS)</li>
+    <li><strong>Audience:</strong> specific tool/API (e.g., MCP server)</li>
+    <li><strong>Scopes:</strong> granular capabilities (e.g., <code>mcp.read tool.search</code>)</li>
+    <li><strong>Sender constraint:</strong>
+      <ul>
+        <li>DPoP: <code>cnf.jkt</code> for browsers/edge/AG-UI</li>
+        <li>mTLS: <code>cnf."x5t#S256"</code> for service↔service</li>
+      </ul>
+    </li>
+    <li><strong>Identity chain:</strong> <code>sub</code> = end user/app; <code>act</code> = gateway/agent (SPIFFE ID)</li>
+    <li><strong>Session graph:</strong> <code>usid</code>, <code>wsid</code>, <code>asid</code>, <code>msid</code> required</li>
+    <li><strong>Observability:</strong> <code>jti</code> (nonce), <code>traceparent</code> (optional)</li>
+  </ul>
+
+  <h3>Registered & Custom Claims</h3>
+  <table class="claim-table">
+    <tr><th>Claim</th><th>Type</th><th>Purpose</th></tr>
+    <tr><td><code>iss</code></td><td>str</td><td>STS issuer URL</td></tr>
+    <tr><td><code>sub</code></td><td>str</td><td>Subject (end user/app identity)</td></tr>
+    <tr><td><code>act</code></td><td>obj</td><td>Actor (caller acting OBO); contains at minimum <code>sub</code> (e.g., SPIFFE ID) and optional <code>client_id</code>, <code>amr</code></td></tr>
+    <tr><td><code>aud</code></td><td>str/arr</td><td>Intended resource (tool/API)</td></tr>
+    <tr><td><code>exp, iat, nbf</code></td><td>num</td><td>Expiry/issued/not-before (epoch seconds)</td></tr>
+    <tr><td><code>jti</code></td><td>str</td><td>Unique token ID (replay detection)</td></tr>
+    <tr><td><code>scope</code></td><td>str</td><td>Space-delimited scopes</td></tr>
+    <tr><td><code>cnf</code></td><td>obj</td><td>Sender-constraint (DPoP <code>jkt</code> or mTLS <code>x5t#S256</code>)</td></tr>
+    <tr><td><code>usid, wsid, asid, msid</code></td><td>str</td><td>Session IDs (User / Workflow / Agent / MCP)</td></tr>
+    <tr><td><code>traceparent</code></td><td>str</td><td>W3C trace context (optional)</td></tr>
+  </table>
+
+  <h3>Sample Token Structure</h3>
+  <p><strong>Compact JWS:</strong></p>
+  <pre>eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCIsImtpZCI6InN0cy0yMDI1LTEwLTI4LWVkMjU1MTk1LTAxIn0.
+<base64url(payload)>.
+<base64url(signature)></pre>
+
+  <p><strong>Decoded Header:</strong></p>
+  <pre>{
+  "alg": "EdDSA",
+  "typ": "JWT",
+  "kid": "sts-2025-10-28-ed25519-01"
+}</pre>
+
+  <p><strong>Decoded Payload (Example):</strong></p>
+  <pre>{
+  "iss": "https://sts.example.org",
+  "sub": "user:9e4b0c8d-4f2b-4c4f-9d4c-7c1f9e6e77a1",
+  "act": {
+    "sub": "spiffe://org.example/ns/agent-gw/sa/default",
+    "client_id": "agent-gateway",
+    "amr": ["obo","mtls"]
+  },
+  "aud": ["https://mcp.tools.example.org/search"],
+  "scope": "mcp.read tool.search",
+  "cnf": { "jkt": "f2Q3i8c3r3v0Hq2b3l9mZx2i3gkKp0Zz8r4b7m3y2VQ" },
+  "usid": "USID-9f1f1e6b-7d9e-4e0a-8a6a-1b3f7e9c2d10",
+  "wsid": "WSID-1a2b3c4d-5e6f-7081-92a3-b4c5d6e7f809",
+  "asid": "ASID-7a6b5c4d-3e2f-1a0b-98c7-d6e5f4a3b201",
+  "msid": "MSID-0f9e8d7c-6b5a-4321-9abc-def012345678",
+  "jti": "b3b8f5a7-8e5b-4f8a-9c01-2d3e4f5a6b7c",
+  "iat": 1767105600,
+  "nbf": 1767105600,
+  "exp": 1767106200,
+  "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"
+}</pre>
+</div>
+
+<!-- UPDATED SLIDE: OBO -->
+<div class="slide">
+  <h2>On-Behalf-Of (OBO) Delegation</h2>
+
+  <h3>What It Is</h3>
+  <p>An <strong>OAuth 2.0 Token Exchange</strong> use case: the gateway/agent requests a new token to act <em>on behalf of</em> a user/app, preserving the <code>sub</code> (subject) and adding an <code>act</code> (actor).</p>
+  <p class="rfc">RFC 8693: https://datatracker.ietf.org/doc/rfc8693/</p>
+
+  <h3>Why Required</h3>
+  <ul>
+    <li>Prevents agents from <strong>replaying end-user bearer tokens</strong>.</li>
+    <li>Each hop receives a token <strong>scoped to its role & tool</strong>, enabling precise policy and audit of <em>who did what for whom</em>.</li>
+  </ul>
+
+  <h3>How We’ll Design/Implement</h3>
+  <p><strong>Token Exchange Request</strong> (form-encoded):</p>
+  <pre>grant_type=urn:ietf:params:oauth:grant-type:token-exchange
+subject_token=<user_or_app_token>
+actor_token=<gateway_or_agent_SVID>
+requested_token_type=urn:ietf:params:oauth:token-type:access_token
+audience=tool:shipping-api
+scope=read:orders invoke:tools</pre>
+
+  <p><strong>Issued Token Claims:</strong></p>
+  <pre>{
+  "sub": "user:alice",
+  "act": { "sub": "spiffe://agents/shipping" },
+  "scp": ["read:orders", "invoke:tools"],
+  "aud": "tool:shipping-api",
+  "exp": 1730400000,
+  "usid": "u-7a3b",
+  "wsid": "w-9c2d",
+  "asid": "a-4e5f",
+  "msid": "m-1a2b"
+}</pre>
+
+  <p>The Gateway <strong>always trades inbound tokens for OBO tokens</strong> before calling agents or tools.</p>
+</div>
+
+<!-- UPDATED SLIDE: DPoP -->
+<div class="slide">
+  <h2>DPoP (Sender-Constrained Tokens)</h2>
+
+  <h3>What It Is</h3>
+  <p>DPoP requires the client to present a per-request <strong>proof JWT</strong> signed by its private key. Access tokens carry the key thumbprint (<code>cnf.jkt</code>). Replays fail without the key.</p>
+  <p class="rfc">RFC 9449: https://www.rfc-editor.org/rfc/rfc9449.html</p>
+
+  <h3>Why Required</h3>
+  <ul>
+    <li>If a token leaks in an agent’s output, it <strong>cannot be replayed</strong> from another device/app.</li>
+    <li>Works for <strong>browser/native apps</strong> that can’t do client TLS mutual auth.</li>
+  </ul>
+
+  <h3>How We’ll Design/Implement</h3>
+  <ul>
+    <li><strong>Token issuance</strong>: STS binds tokens to client’s JWK via <code>"cnf": { "jkt": "<thumbprint>" }</code>.</li>
+    <li><strong>Request validation</strong>: Gateway verifies DPoP header JWT:
+      <ul>
+        <li>Checks <code>htu</code> (HTTP URI), <code>htm</code> (HTTP method), <code>iat</code>, <code>jti</code></li>
+        <li>Matches <code>jkt</code> to token’s <code>cnf.jkt</code></li>
+        <li>Enforces <strong>±5s clock skew</strong> and <strong>replay cache</strong> on <code>jti</code></li>
+      </ul>
+    </li>
+    <li>When mTLS is feasible (service↔service), also support <strong>RFC 8705 certificate-bound tokens</strong> as a stronger alternative.</li>
+  </ul>
+</div>
+
+
+<!-- NEW SLIDE: Scenario 1 — User → Agent (AG-UI) -->
+<div class="slide">
+  <h2>Scenario 1 — User in Browser → Care Coordinator Agent (AG-UI)</h2>
+
+  <p><strong>Flow:</strong></p>
+  <ol>
+    <li>User logs in → IdP issues tokens; SPA receives <strong>DPoP-bound access token</strong> (or sets <code>Secure+HttpOnly+SameSite</code> cookie).</li>
+    <li>Browser opens AG-UI channel:
+      <ul>
+        <li><strong>HTTP/SSE</strong>: Sends request with <code>Authorization: Bearer <token></code> + <code>DPoP</code> header.</li>
+        <li><strong>WebSocket</strong>: Sends <code>DPoP</code> on <code>Upgrade</code> request; Gateway pins session to connection.</li>
+      </ul>
+    </li>
+    <li>Gateway → <strong>STS</strong>: Token Exchange (OBO)
+      <ul>
+        <li><code>subject_token</code> = user token</li>
+        <li><code>actor</code> = gateway SPIFFE ID</li>
+        <li><code>aud</code> = <code>care-coordinator-agent</code>, short TTL (≤5 min)</li>
+      </ul>
+    </li>
+    <li>Gateway → Agent: Presents <strong>actor-scoped, DPoP-bound token</strong>.</li>
+    <li>Agent streams responses via AG-UI; Gateway:
+      <ul>
+        <li>Performs <strong>output scanning</strong> (secrets/PII redaction)</li>
+        <li>Logs with <code>USID</code>, <code>WSID</code>, <code>ASID</code></li>
+        <li>Can call <code>POST /sts/kill?wsid=...</code> on policy violations</li>
+      </ul>
+    </li>
+  </ol>
+  <p class="rfc">DPoP over WebSocket: RFC 9449 §5.4 | OBO: RFC 8693</p>
+</div>
+
+<!-- NEW SLIDE: Scenario 2 — Backend → Agent (REST) -->
+<div class="slide">
+  <h2>Scenario 2 — Backend/Microservice → Care Coordinator Agent (REST)</h2>
+
+  <p><strong>Flow:</strong></p>
+  <ol>
+    <li>Service authenticates to Gateway using <strong>X.509-SVID mTLS</strong> (SPIFFE identity). <span class="rfc">spiffe.io</span></li>
+    <li>Gateway → <strong>STS</strong>: Token Exchange (OBO)
+      <ul>
+        <li><code>subject</code> = system user or workflow initiator</li>
+        <li><code>actor</code> = service’s SPIFFE ID</li>
+        <li><code>aud</code> = <code>care-coordinator-agent</code></li>
+        <li>Grants <strong>least-privilege scopes</strong>, short TTL</li>
+      </ul>
+    </li>
+    <li>Gateway → Agent: Forwards <strong>mTLS-bound access token</strong>.</li>
+    <li>Gateway propagates:
+      <ul>
+        <li><code>WSID</code> (e.g., “member-roster-sync”)</li>
+        <li>New <code>ASID</code> for this agent instance</li>
+      </ul>
+    </li>
+  </ol>
+  <p><strong>⚠️ Critical:</strong> If starting from OAuth2 Client Credentials, <em>never pass raw credentials</em>. Always exchange at STS first so the agent only sees scoped, short-lived, mTLS-bound tokens.</p>
+  <p class="rfc">OBO with workload identity: RFC 8693 + SPIFFE</p>
+</div>
+
+<!-- NEW SLIDE: Scenario 3 — Agent-to-Agent (A2A) -->
+<div class="slide">
+  <h2>Scenario 3 — Care Coordinator Agent → Care Gap Analyzer Agent (A2A)</h2>
+
+  <p><strong>Flow:</strong></p>
+  <ol>
+    <li>Caller agent authenticates to Gateway:
+      <ul>
+        <li>Preferred: <strong>mTLS with SVID</strong></li>
+        <li>Fallback (edge): <strong>DPoP-bound token</strong></li>
+      </ul>
+    </li>
+    <li>Gateway → <strong>STS</strong>: Token Exchange (OBO)
+      <ul>
+        <li><code>subject</code> = original user or system subject</li>
+        <li><code>actor</code> = <code>care-coordinator-agent</code> SPIFFE ID</li>
+        <li><code>aud</code> = <code>care-gap-analyzer-agent</code></li>
+        <li><strong>Minimal scopes</strong>, short TTL</li>
+      </ul>
+    </li>
+    <li>Gateway → Callee agent: Attaches <strong>sender-constrained token</strong> (mTLS-bound preferred).</li>
+    <li>Session propagation:
+      <ul>
+        <li><code>WSID</code> inherited from parent workflow</li>
+        <li>New <code>ASID₂</code> for analyzer agent</li>
+        <li>Correlate <code>ASID₁ ↔ ASID₂</code> for lineage</li>
+      </ul>
+    </li>
+  </ol>
+  <p class="rfc">A2A delegation: RFC 8693 §2.1 | SPIFFE for agent identity</p>
+</div>
+
+<!-- NEW SLIDE: Scenario 4 — Agent → Tool (MCP) -->
+<div class="slide">
+  <h2>Scenario 4 — Care Gap Analyzer Agent → “Gaps in Care” Tools (MCP)</h2>
+
+  <p><strong>Flow:</strong></p>
+  <ol>
+    <li>Analyzer agent authenticates to Gateway via <strong>mTLS SVID</strong>.</li>
+    <li>Gateway → <strong>STS</strong>: OBO token exchange
+      <ul>
+        <li><code>aud</code> = <code>clinical-package-mcp</code></li>
+        <li>Tool-specific scopes (e.g., <code>mcp.read conditions</code>)</li>
+        <li>Embeds new <code>MSID</code> for this MCP session</li>
+      </ul>
+    </li>
+    <li>Gateway → MCP Server:
+      <ul>
+        <li>Establishes MCP channel (JSON-RPC over HTTP/2 or WebSocket)</li>
+        <li>Enforces <strong>tool allow-list</strong> and <strong>rate limits</strong></li>
+        <li>Performs <strong>output scanning</strong> (redact PHI/secrets)</li>
+        <li>Correlates <code>ASID ↔ MSID</code> in logs</li>
+      </ul>
+    </li>
+  </ol>
+  <p><strong>Full lifecycle control:</strong> <code>/sts/introspect</code>, <code>/sts/revoke</code>, and <code>/sts/kill?msid=...</code> supported at any time.</p>
+  <p class="rfc">MCP over secure channel + STS binding: RFC 8693, RFC 9449</p>
+</div>
+
+<!-- NEW SLIDE: Scenario 5 — Multi-Hop Agent Chain -->
+<div class="slide">
+  <h2>Scenario 5 — Care Coordinator → Scheduling Agent → EMR/PMS MCP</h2>
+
+  <p><strong>Flow:</strong></p>
+  <ol>
+    <li><strong>Coordinator → Gateway</strong>: mTLS SVID.</li>
+    <li>Gateway → <strong>STS</strong>: OBO token for <code>scheduling-agent</code>; propagates <code>WSID</code>; issues new <code>ASID_sched</code>.</li>
+    <li><strong>Scheduling Agent → Gateway</strong>: mTLS SVID.</li>
+    <li>Gateway → <strong>STS</strong>: Per-tool OBO exchange
+      <ul>
+        <li><code>aud</code> = <code>emr-pms-mcp</code></li>
+        <li>Minimal scopes per step:
+          <ul>
+            <li><code>appointments.read</code> (find slots)</li>
+            <li><code>appointments.create</code> (book)</li>
+          </ul>
+        </li>
+        <li>Each step: <strong>new short-lived token</strong> (≤2 min)</li>
+      </ul>
+    </li>
+    <li>Gateway → EMR/PMS MCP:
+      <ul>
+        <li>Establishes <code>MSID_sched</code></li>
+        <li>Enforces step-wise authorization</li>
+      </ul>
+    </li>
+    <li><strong>On anomaly/failure</strong>: Call <code>POST /sts/kill?wsid=...</code> or <code>?asid=...</code> to:
+      <ul>
+        <li>Revoke all descendant tokens</li>
+        <li>Terminate MCP/WebSocket connections</li>
+        <li>Log kill event for audit</li>
+      </ul>
+    </li>
+  </ol>
+  <p><strong>Principle:</strong> Narrowest scope, shortest TTL, full revocation cascade.</p>
+</div>
+
+<!-- Slide: Integrated Flow -->
+<div class="slide">
+  <h2>Integrated Zero Trust Flow: From User to Tool</h2>
+  <div class="placeholder">
+    [SEQUENCE DIAGRAM: User → Gateway → STS → Agent → Tool]
+  </div>
+  <p><strong>Security Guarantees:</strong></p>
+  <ul>
+    <li>✅ Identity: SPIFFE for agents, OIDC for users</li>
+    <li>✅ Context: Session IDs in every token</li>
+    <li>✅ Delegation: OBO preserves subject/actor</li>
+    <li>✅ Non-replayable: DPoP on all tokens</li>
+    <li>✅ Least privilege: Entitlements checked at STS</li>
+  </ul>
+</div>
+
+<!-- Slide: Why Not Generic OAuth? -->
+<div class="slide">
+  <h2>Why Not Use Azure Entra or Generic OAuth?</h2>
+  <p><strong>Limitations:</strong></p>
+  <ul>
+    <li>❌ No native support for <strong>workload identity (SPIFFE)</strong></li>
+    <li>❌ No built-in <strong>session context propagation</strong></li>
+    <li>❌ Limited <strong>OBO depth</strong> (typically 1 hop)</li>
+    <li>❌ No <strong>DPoP + SPIFFE integration</strong></li>
+    <li>❌ Cannot enforce <strong>MCP-specific redaction</strong></li>
+  </ul>
+
+  <p><strong>Why Build In-House STS?</strong></p>
+  <ul>
+    <li>Full control over token claims</li>
+    <li>Tight integration with SPIRE, Redis, Gateway</li>
+    <li>Custom policy engine for agent delegation</li>
+    <li>Compliance with Zero Trust + OWASP AI</li>
+  </ul>
+
+  <div class="quote">
+    Generic IdPs solve human identity. <strong>Agentic systems need purpose-built identity orchestration.</strong>
+  </div>
+</div>
+
+
+<!-- Final Slide -->
+<div class="slide">
+  <h2>Thank You</h2>
+  <p><strong>Questions?</strong></p>
+  <p>Contact: [email@company.com]</p>
+  <p><strong>Resources:</strong></p>
+  <ul>
+    <li>SPIFFE/SPIRE: <a href="https://spiffe.io">https://spiffe.io</a></li>
+    <li>Token Exchange (RFC 8693): <a href="https://datatracker.ietf.org/doc/rfc8693/">RFC 8693</a></li>
+    <li>DPoP (RFC 9449): <a href="https://www.rfc-editor.org/rfc/rfc9449.html">RFC 9449</a></li>
+    <li>Certificate-Bound Tokens (RFC 8705): <a href="https://datatracker.ietf.org/doc/rfc8705/">RFC 8705</a></li>
+    <li>OWASP AI Security: <a href="https://owasp.org/www-project-ai-security-and-privacy-guide/">OWASP AI Guide</a></li>
+  </ul>
+</div>
+
+</body>
+</html>
