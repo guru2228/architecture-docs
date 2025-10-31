@@ -1,0 +1,184 @@
+<!-- Slide: Token Evolution in a Zero-Trust Agentic Flow -->
+<div class="slide">
+  <h2>Token Evolution in a Zero-Trust Agentic Flow</h2>
+  <p>From initial user login to multi-hop agent delegation—each token is short-lived, audience-scoped, sender-constrained, and enriched with session context.</p>
+
+  <h3>1) Initial User Access Token (IdP → App)</h3>
+  <p><em>Purpose:</em> Prove user identity to your app/backend (not agents). Contains roles/entitlements for STS policy evaluation.</p>
+  <pre>{
+  "iss": "https://idp.optum.example",
+  "sub": "user:9e4b0c8d-4f2b-4c4f-9d4c-7c1f9e6e77a1",
+  "aud": "https://app.optum.example/api",
+  "azp": "web-frontend-client",
+  "scope": "openid profile email",
+  "roles": ["CareOps.Coordinator"],
+  "entitlements": [
+    "agent:care-coordinator:invoke",
+    "agent:scheduler:invoke",
+    "tool:clinical.read"
+  ],
+  "iat": 1767200000,
+  "exp": 1767203600,
+  "jti": "f10d4d2a-1f3e-47f4-9f7b-3a2f3f7a9c11"
+}</pre>
+  <p><em>Note:</em> Avoid listing agent SPIFFE IDs here; keep mapping in STS/OPA for security.</p>
+
+  <h3>2) Initial App/Service Token (Client Credentials or mTLS-bound)</h3>
+  <p><em>Purpose:</em> Backend identity when no end user is present. mTLS-bound for service↔gateway trust.</p>
+  <pre>{
+  "iss": "https://idp.optum.example",
+  "sub": "svc:member-roster",
+  "client_id": "member-roster-api",
+  "aud": "https://gw.optum.example",
+  "scope": "agent.invoke",
+  "entitlements": [
+    "agent:care-coordinator:invoke",
+    "tool:clinical.read"
+  ],
+  "cnf": { "x5t#S256": "dZ5y...cert_thumbprint..." },
+  "iat": 1767200000,
+  "exp": 1767201800,
+  "jti": "0e9a6a87-2d0d-4c9a-8d3c-2f1a4ee7d9ab"
+}</pre>
+
+  <h3>3) OBO #1 — Gateway → Care Coordinator Agent</h3>
+  <p><em>Purpose:</em> Short-lived token for gateway to call agent on user’s behalf.</p>
+  <pre>{
+  "iss": "https://sts.optum.example",
+  "sub": "user:9e4b0c8d-4f2b-4c4f-9d4c-7c1f9e6e77a1",
+  "act": {
+    "sub": "spiffe://optum.example/ns/gateway/sa/agent-gateway",
+    "client_id": "agent-gateway",
+    "amr": ["obo", "mtls"]
+  },
+  "aud": "spiffe://optum.example/ns/agents/sa/care-coordinator",
+  "scope": "agent.invoke tool.read",
+  "cnf": { "x5t#S256": "GW_CERT_THUMBPRINT" },
+  "usid": "USID-9f1f1e6b-7d9e-4e0a-8a6a-1b3f7e9c2d10",
+  "wsid": "WSID-a9c7d12e-8b4f-4311-8b9c-b8b6c3f4f001",
+  "asid": "ASID-cc-001",
+  "iat": 1767200100,
+  "exp": 1767200700,
+  "jti": "1a2b3c4d-5555-4444-9999-abcdef012345"
+}</pre>
+
+  <h3>4) OBO #2 — Care Coordinator → Care Gap Analyzer (A2A)</h3>
+  <p><em>Purpose:</em> Delegated hop to another agent; new ASID, same WSID.</p>
+  <pre>{
+  "iss": "https://sts.optum.example",
+  "sub": "user:9e4b0c8d-4f2b-4c4f-9d4c-7c1f9e6e77a1",
+  "act": {
+    "sub": "spiffe://optum.example/ns/agents/sa/care-coordinator",
+    "amr": ["obo", "mtls"]
+  },
+  "aud": "spiffe://optum.example/ns/agents/sa/care-gap-analyzer",
+  "scope": "agent.invoke tool.read",
+  "cnf": { "x5t#S256": "COORD_CERT_THUMBPRINT" },
+  "wsid": "WSID-a9c7d12e-8b4f-4311-8b9c-b8b6c3f4f001",
+  "asid": "ASID-anlz-001",
+  "iat": 1767200200,
+  "exp": 1767200800,
+  "jti": "3c9f2a64-4332-4e24-8a9a-7a6e21c01e77"
+}</pre>
+
+  <h3>5) OBO #3 — Care Gap Analyzer → Clinical MCP Server</h3>
+  <p><em>Purpose:</em> Tool invocation with MCP session context (MSID).</p>
+  <pre>{
+  "iss": "https://sts.optum.example",
+  "sub": "user:9e4b0c8d-4f2b-4c4f-9d4c-7c1f9e6e77a1",
+  "act": {
+    "sub": "spiffe://optum.example/ns/agents/sa/care-gap-analyzer",
+    "amr": ["obo", "mtls"]
+  },
+  "aud": "https://clinical-mcp.optum.example",
+  "scope": "mcp.read gaps.search",
+  "cnf": { "x5t#S256": "ANALYZER_CERT_THUMBPRINT" },
+  "wsid": "WSID-a9c7d12e-8b4f-4311-8b9c-b8b6c3f4f001",
+  "asid": "ASID-anlz-001",
+  "msid": "MSID-clinical-001",
+  "iat": 1767200300,
+  "exp": 1767200900,
+  "jti": "d6b8b55d-9f2a-4b87-8db7-20e2ef1edc2f"
+}</pre>
+
+  <h3>6) OBO #4 — Service (No User) → Care Coordinator Agent</h3>
+  <p><em>Purpose:</em> Two-legged flow: service acts as subject (no end user).</p>
+  <pre>{
+  "iss": "https://sts.optum.example",
+  "sub": "svc:member-roster",
+  "act": {
+    "sub": "spiffe://optum.example/ns/services/sa/member-roster",
+    "amr": ["obo", "mtls"]
+  },
+  "aud": "spiffe://optum.example/ns/agents/sa/care-coordinator",
+  "scope": "agent.invoke",
+  "cnf": { "x5t#S256": "ROSTER_CERT_THUMBPRINT" },
+  "wsid": "WSID-roster-2025-10-31",
+  "asid": "ASID-cc-002",
+  "iat": 1767200400,
+  "exp": 1767201000,
+  "jti": "5a0f3e07-3b1e-4684-8b67-1c2e3862a4e2"
+}</pre>
+</div>
+
+<!-- Slide: Concrete Blueprint — Putting It Into Practice -->
+<div class="slide">
+  <h2>Concrete Blueprint: Putting It Into Practice</h2>
+  <p>A practical, production-ready flow for secure, session-aware agent delegation.</p>
+
+  <h3>1. Identity Provider (IdP)</h3>
+  <ul>
+    <li>Issues user/service tokens with <strong>roles</strong> (e.g., <code>CareOps.Coordinator</code>)</li>
+    <li>Optionally includes minimal <strong>entitlements</strong> (avoid agent SPIFFE IDs in browser tokens)</li>
+  </ul>
+
+  <h3>2. Profile Service (Server-Side)</h3>
+  <ul>
+    <li>Expands roles → full <strong>entitlement set</strong> (e.g., <code>agent:care-coordinator:invoke</code>)</li>
+    <li>Uses cached, signed responses to avoid runtime IdP calls</li>
+  </ul>
+
+  <h3>3. Agent Registry</h3>
+  <ul>
+    <li>Central store of agent metadata:
+      <ul>
+        <li><code>spiffe_id</code></li>
+        <li><code>labels</code> (e.g., <code>env=prod</code>, <code>team=careops</code>)</li>
+        <li><code>default_scopes</code></li>
+        <li>tool allow-lists, eval hooks, budgets</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h3>4. Secure Token Service (STS) — Token Exchange Flow</h3>
+  <p><strong>Input:</strong> <code>subject</code>, <code>actor</code>, <code>requested_aud</code>, <code>requested_scopes</code>, <code>ctx</code> (USID/WSID)</p>
+  <ol>
+    <li>Fetch <strong>entitlements</strong> (from token or profile service)</li>
+    <li>Fetch <strong>agent record</strong> from registry (by <code>requested_aud</code>)</li>
+    <li>Call <strong>OPA Policy Engine</strong> with:
+      <ul>
+        <li>Subject entitlements</li>
+        <li>Actor identity</li>
+        <li>Agent metadata</li>
+        <li>Session context</li>
+      </ul>
+    </li>
+    <li>OPA returns: <code>allow/deny</code> + <strong>narrowed scopes</strong> (least privilege)</li>
+    <li>STS mints <strong>OBO token</strong> with:
+      <ul>
+        <li><code>aud</code>, <code>scope</code>, <code>sub</code>, <code>act</code></li>
+        <li>Session claims: <code>usid</code>, <code>wsid</code>, <code>asid</code>, <code>msid</code></li>
+        <li>Short <code>TTL</code> (≤10 min)</li>
+        <li>Sender constraint: <code>cnf.jkt</code> (DPoP) or <code>cnf."x5t#S256"</code> (mTLS)</li>
+      </ul>
+    </li>
+  </ol>
+
+  <h3>5. Agent Gateway — Enforcement Layer</h3>
+  <ul>
+    <li><strong>Rejects raw IdP tokens</strong> — only accepts STS-issued OBO tokens</li>
+    <li>Enforces <strong>DPoP or mTLS</strong> on every call</li>
+    <li><strong>Propagates session IDs</strong> (USID/WSID/ASID/MSID) in headers and logs</li>
+    <li>Blocks requests missing required context or constraints</li>
+  </ul>
+</div>
